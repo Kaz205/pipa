@@ -95,6 +95,13 @@ static int __sched __down_read_common(struct rw_semaphore *sem, int state)
 	if (blk_needs_flush_plug(current))
 		blk_schedule_flush_plug(current);
 
+	/*
+	 * Flush blk before ->pi_blocked_on is set. At schedule() time it is too
+	 * late if one of the callbacks needs to acquire a sleeping lock.
+	 */
+	if (blk_needs_flush_plug(current))
+		blk_schedule_flush_plug(current);
+
 	might_sleep();
 	raw_spin_lock_irq(&m->wait_lock);
 	/*
