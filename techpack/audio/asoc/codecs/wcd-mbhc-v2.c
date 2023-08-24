@@ -27,7 +27,7 @@
 #include "bolero/bolero-cdc.h"
 #include <asoc/wcd-mbhc-v2-api.h>
 
-#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU)
+#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU) || defined(CONFIG_MACH_XIAOMI_PIPA)
 #include <linux/debugfs.h>
 
 #define HEADSET_STATUS_RECORD_INDEX_PLUGIN_HEADSET (3)
@@ -82,13 +82,13 @@ void wcd_mbhc_jack_report(struct wcd_mbhc *mbhc,
 			  struct snd_soc_jack *jack, int status, int mask)
 {
 	snd_soc_jack_report(jack, status, mask);
-#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU)
+#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU) || defined(CONFIG_MACH_XIAOMI_PIPA)
 	add_headset_event(mbhc->hph_status, mask, jack->status);
 #endif
 }
 EXPORT_SYMBOL(wcd_mbhc_jack_report);
 
-#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU)
+#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU) || defined(CONFIG_MACH_XIAOMI_PIPA)
 static void add_headset_event(int status, int mask, int jackstatus) {
 	if (status == HEADSET_STATUS_RECORD_INDEX_PLUGOUT) {
 		headset_status[4] = maxF(headset_status[4], HEADSET_EVENT_PLUGOUT_HEADPHONE);
@@ -1956,7 +1956,7 @@ int wcd_mbhc_init(struct wcd_mbhc *mbhc, struct snd_soc_component *component,
 
 	pr_debug("%s: enter\n", __func__);
 
-#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU)
+#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU) || defined(CONFIG_MACH_XIAOMI_PIPA)
 	mbhc_debugfs_dir = debugfs_create_dir(DEBUGFS_DIR_NAME, NULL);
 	if (!IS_ERR(mbhc_debugfs_dir)) {
 		debugfs_create_file(DEBUGFS_HEADSET_STATUS_FILE_NAME, 0666,
