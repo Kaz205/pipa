@@ -87,4 +87,10 @@ menu "Xiaomi board selection"
 		help
 		  Support for Mi 10
 
+	config MACH_XIAOMI_PIPA
+		bool "Xiaomi umi board"
+		select MACH_XIAOMI_SM8250
+		help
+		  Support for Xiaomi Pad 6
+
 endmenu
