@@ -146,6 +146,10 @@ ifdef CONFIG_WCD_DSP_GLINK
 WDSP_GLINK += wcd-dsp-glink.o
 endif
 
+ifeq (y, $(filter y,$(CONFIG_MACH_XIAOMI_DAGU) $(CONFIG_MACH_XIAOMI_PIPA)))
+CDEFINES += -DCONFIG_MMHARDWARE_DETECTION
+endif
+
 LINUX_INC +=	-Iinclude/linux
 
 INCS +=		$(COMMON_INC) \
