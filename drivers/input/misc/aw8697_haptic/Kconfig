@@ -21,3 +21,12 @@ config INPUT_AW8697_HAPTIC_DAGU
 	  dagu.
 
 	  If unsure, say N.
+
+config INPUT_AW8697_HAPTIC_PIPA
+	bool "Awinic AW8697 HAPTIC pipa driver"
+	depends on INPUT_AW8697_HAPTIC
+	help
+	  Say Y here if you want to use the AW8697 driver from
+	  pipa.
+
+	  If unsure, say N.
