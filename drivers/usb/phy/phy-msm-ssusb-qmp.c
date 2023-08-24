@@ -139,6 +139,7 @@ struct msm_ssphy_qmp {
 	int			reg_offset_cnt;
 	u32			*qmp_phy_init_seq;
 	int			init_seq_len;
+	bool        usb3_eye;
 };
 
 static const struct of_device_id msm_usb_id_table[] = {
@@ -346,6 +347,10 @@ static int configure_phy_regs(struct usb_phy *uphy,
 			usleep_range(reg->delay, reg->delay + 10);
 		reg++;
 	}
+
+	if (phy->usb3_eye)
+		reg = reg - 153;
+
 	return 0;
 }
 
@@ -1114,6 +1119,8 @@ static int msm_ssphy_qmp_probe(struct platform_device *pdev)
 
 	if (of_property_read_bool(dev->of_node, "qcom,vbus-valid-override"))
 		phy->phy.flags |= PHY_VBUS_VALID_OVERRIDE;
+
+	phy->usb3_eye = of_property_read_bool(dev->of_node, "usb3,eyegram-tuning");
 
 	phy->phy.dev			= dev;
 	phy->phy.init			= msm_ssphy_qmp_init;
