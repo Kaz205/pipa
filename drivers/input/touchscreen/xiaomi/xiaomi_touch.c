@@ -142,6 +142,9 @@ static struct xiaomi_touch xiaomi_touch_dev = {
 	.palm_mutex = __MUTEX_INITIALIZER(xiaomi_touch_dev.palm_mutex),
 	.psensor_mutex = __MUTEX_INITIALIZER(xiaomi_touch_dev.psensor_mutex),
 	.wait_queue = __WAIT_QUEUE_HEAD_INITIALIZER(xiaomi_touch_dev.wait_queue),
+#ifdef CONFIG_TOUCHSCREEN_NEW_PEN_CONNECT_STRATEGY
+	.pen_connect_strategy_mutex = __MUTEX_INITIALIZER(xiaomi_touch_dev.pen_connect_strategy_mutex),
+#endif // CONFIG_TOUCHSCREEN_NEW_PEN_CONNECT_STRATEGY
 };
 
 struct xiaomi_touch *xiaomi_touch_dev_get(int minor)
@@ -152,12 +155,12 @@ struct xiaomi_touch *xiaomi_touch_dev_get(int minor)
 		return NULL;
 }
 
-struct class *get_xiaomi_touch_class()
+struct class *get_xiaomi_touch_class(void)
 {
 	return xiaomi_touch_dev.class;
 }
 
-struct device *get_xiaomi_touch_dev()
+struct device *get_xiaomi_touch_dev(void)
 {
 	return xiaomi_touch_dev.dev;
 }
@@ -488,8 +491,59 @@ static ssize_t resolution_factor_show(struct device *dev,
 	return snprintf(buf, PAGE_SIZE, "%d", factor);
 }
 
+#ifdef CONFIG_TOUCHSCREEN_NEW_PEN_CONNECT_STRATEGY
+int update_pen_connect_strategy_value(bool pen_active)
+{
+	char *envp[2];
+
+	mutex_lock(&xiaomi_touch_dev.pen_connect_strategy_mutex);
+
+	if (!touch_pdata) {
+		mutex_unlock(&xiaomi_touch_dev.pen_connect_strategy_mutex);
+		return -ENODEV;
+	}
+
+	MI_TOUCH_LOGI(1, "%s %s: pen_active = %d\n", MI_TAG, __func__,
+		      pen_active);
+	touch_pdata->pen_active = pen_active;
+
+	/* notify surfaceflinger */
+	envp[0] = "SOURCE=sysfs";
+	envp[1] = NULL;
+	kobject_uevent_env(&xiaomi_touch_dev.dev->kobj, KOBJ_CHANGE, envp);
+	sysfs_notify(&xiaomi_touch_dev.dev->kobj, NULL, "pen_connect_strategy");
+
+	mutex_unlock(&xiaomi_touch_dev.pen_connect_strategy_mutex);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(update_pen_connect_strategy_value);
+
+static ssize_t pen_connect_strategy_show(struct device *dev,
+					 struct device_attribute *attr,
+					 char *buf)
+{
+	struct xiaomi_touch_pdata *pdata = dev_get_drvdata(dev);
+	ssize_t count = 0;
+
+	if (buf != NULL) {
+		count += snprintf(buf, PAGE_SIZE, "%d\n", pdata->pen_active);
+		MI_TOUCH_LOGI(1, "%s %s: pen_active = %d\n", MI_TAG, __func__,
+			      pdata->pen_active);
+	} else {
+		MI_TOUCH_LOGE(1, "%s %s: buf is NULL\n", MI_TAG, __func__);
+	}
+
+	return count;
+}
+#endif // CONFIG_TOUCHSCREEN_NEW_PEN_CONNECT_STRATEGY
+
 static DEVICE_ATTR(palm_sensor, (S_IRUGO | S_IWUSR | S_IWGRP), palm_sensor_show,
 		   palm_sensor_store);
+
+#ifdef CONFIG_TOUCHSCREEN_NEW_PEN_CONNECT_STRATEGY
+static DEVICE_ATTR(pen_connect_strategy, (S_IRUGO), pen_connect_strategy_show,
+		   NULL);
+#endif // CONFIG_TOUCHSCREEN_NEW_PEN_CONNECT_STRATEGY
 
 static DEVICE_ATTR(p_sensor, (S_IRUGO | S_IWUSR | S_IWGRP), p_sensor_show,
 		   p_sensor_store);
@@ -513,14 +567,21 @@ static DEVICE_ATTR(partial_diff_data, (S_IRUGO | S_IWUSR | S_IWGRP),
 static DEVICE_ATTR(resolution_factor, 0644, resolution_factor_show, NULL);
 
 static struct attribute *touch_attr_group[] = {
-	&dev_attr_palm_sensor.attr,	  &dev_attr_p_sensor.attr,
-	&dev_attr_panel_vendor.attr,	  &dev_attr_panel_color.attr,
-	&dev_attr_panel_display.attr,	  &dev_attr_touch_vendor.attr,
+	&dev_attr_palm_sensor.attr,
+	&dev_attr_p_sensor.attr,
+	&dev_attr_panel_vendor.attr,
+	&dev_attr_panel_color.attr,
+	&dev_attr_panel_display.attr,
+	&dev_attr_touch_vendor.attr,
 	&dev_attr_log_debug.attr,
 #if XIAOMI_ROI
 	&dev_attr_partial_diff_data.attr,
 #endif
-	&dev_attr_resolution_factor.attr, NULL,
+	&dev_attr_resolution_factor.attr,
+#ifdef CONFIG_TOUCHSCREEN_NEW_PEN_CONNECT_STRATEGY
+	&dev_attr_pen_connect_strategy.attr,
+#endif // CONFIG_TOUCHSCREEN_NEW_PEN_CONNECT_STRATEGY
+	NULL,
 };
 
 static const struct of_device_id xiaomi_touch_of_match[] = {
@@ -550,7 +611,6 @@ static int xiaomi_touch_parse_dt(struct device *dev,
 	return 0;
 }
 
-#if XIAOMI_ROI
 void xiaomi_touch_send_btn_tap_key(int status)
 {
 	if (xiaomi_touch_dev.key_input_dev) {
@@ -567,7 +627,6 @@ void xiaomi_touch_send_btn_tap_key(int status)
 	}
 }
 EXPORT_SYMBOL(xiaomi_touch_send_btn_tap_key);
-#endif
 
 static int xiaomi_touch_probe(struct platform_device *pdev)
 {
