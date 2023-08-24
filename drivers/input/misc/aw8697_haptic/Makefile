@@ -15,6 +15,8 @@ endif
 obj-$(CONFIG_INPUT_AW8697_HAPTIC)	+= aw8697-haptic.o
 ifeq ($(CONFIG_INPUT_AW8697_HAPTIC_DAGU),y)
 aw8697-haptic-objs = aw8697_dagu.o
+else ifeq ($(CONFIG_INPUT_AW8697_HAPTIC_PIPA),y)
+aw8697-haptic-objs = aw8697_pipa.o
 else
 aw8697-haptic-objs = aw8697.o
 endif
