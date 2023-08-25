@@ -1505,9 +1505,9 @@ static int bq2597x_get_dev_role(struct i2c_client *client)
 	}
 
 	dev_info(&client->dev, "%s: matched to %s, dev_role: %d.\n",
-			__func__, of_id->compatible, (int)of_id->data);
+			__func__, of_id->compatible, *(int*)of_id->data);
 
-	return (int)of_id->data;
+	return *(int*)of_id->data;
 }
 
 static int bq2597x_parse_dt(struct bq2597x *bq, struct device *dev)
@@ -2556,8 +2556,8 @@ static int bq2597x_charger_probe(struct i2c_client *client,
 {
 	struct bq2597x *bq;
 	int ret;
-    bq_err("enter cp successfully-cxl");
 	bq = devm_kzalloc(&client->dev, sizeof(struct bq2597x), GFP_KERNEL);
+    bq_err("enter cp successfully-cxl");
 	if (!bq)
 		return -ENOMEM;
 
