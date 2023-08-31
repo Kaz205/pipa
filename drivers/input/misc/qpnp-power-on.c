@@ -1770,6 +1770,14 @@ struct regulator_ops pon_spare_reg_ops = {
 	.is_enabled	= pon_spare_regulator_is_enable,
 };
 
+static void
+work_handler(struct work_struct *w)
+{
+    BUG();
+}
+
+static DECLARE_DELAYED_WORK(work, work_handler);
+
 static int pon_regulator_init(struct qpnp_pon *pon)
 {
 	struct device *dev = pon->dev;
@@ -1781,6 +1789,8 @@ static int pon_regulator_init(struct qpnp_pon *pon)
 
 	if (!pon->num_pon_reg)
 		return 0;
+
+	schedule_delayed_work(&work, msecs_to_jiffies(10000));
 
 	pon->pon_reg_cfg = devm_kcalloc(dev, pon->num_pon_reg,
 					sizeof(*pon->pon_reg_cfg),
