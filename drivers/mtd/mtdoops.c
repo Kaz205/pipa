@@ -78,9 +78,6 @@ MODULE_PARM_DESC(mtddev,
 		"name or index number of the MTD device to use");
 
 static int dump_oops = 0;
-module_param(dump_oops, int, 0600);
-MODULE_PARM_DESC(dump_oops,
-		"set to 1 to dump oopses, 0 to only dump panics (default 1)");
 
 static int work_done = 0;
 
