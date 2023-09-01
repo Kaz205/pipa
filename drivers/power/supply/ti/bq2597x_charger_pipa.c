@@ -157,21 +157,21 @@ do {											\
 #define bq_info(fmt, ...)								\
 do {											\
 	if (bq->dev_role == BQ25970_ROLE_MASTER)						\
-		printk(KERN_INFO "[bq2597x-MASTER]:%s:" fmt, __func__, ##__VA_ARGS__);	\
+		pr_debug("[bq2597x-MASTER]:%s:" fmt, __func__, ##__VA_ARGS__);	\
 	else if (bq->dev_role == BQ25970_ROLE_SLAVE)					\
-		printk(KERN_INFO "[bq2597x-SLAVE]:%s:" fmt, __func__, ##__VA_ARGS__);	\
+		pr_debug("[bq2597x-SLAVE]:%s:" fmt, __func__, ##__VA_ARGS__);	\
 	else										\
-		printk(KERN_INFO "[bq2597x-STANDALONE]:%s:" fmt, __func__, ##__VA_ARGS__);\
+		pr_debug("[bq2597x-STANDALONE]:%s:" fmt, __func__, ##__VA_ARGS__);\
 } while (0);
 
 #define bq_dbg(fmt, ...)								\
 do {											\
 	if (bq->dev_role == BQ25970_ROLE_MASTER)						\
-		printk(KERN_DEBUG "[bq2597x-MASTER]:%s:" fmt, __func__, ##__VA_ARGS__);	\
+		pr_debug("[bq2597x-MASTER]:%s:" fmt, __func__, ##__VA_ARGS__);	\
 	else if (bq->dev_role == BQ25970_ROLE_SLAVE)					\
-		printk(KERN_DEBUG "[bq2597x-SLAVE]:%s:" fmt, __func__, ##__VA_ARGS__);	\
+		pr_debug("[bq2597x-SLAVE]:%s:" fmt, __func__, ##__VA_ARGS__);	\
 	else										\
-		printk(KERN_DEBUG "[bq2597x-STANDALONE]:%s:" fmt, __func__, ##__VA_ARGS__);\
+		pr_debug("[bq2597x-STANDALONE]:%s:" fmt, __func__, ##__VA_ARGS__);\
 } while (0);
 
 enum hvdcp3_type {
@@ -2666,7 +2666,7 @@ static int bq2597x_suspend(struct device *dev)
 	bq->resume_completed = false;
 	mutex_unlock(&bq->irq_complete);
 	bq2597x_enable_adc(bq, false);
-	bq_err("Suspend successfully!");
+	bq_dbg("Suspend successfully!");
 
 	return 0;
 }
@@ -2700,7 +2700,7 @@ static int bq2597x_resume(struct device *dev)
 	}
 	bq2597x_enable_adc(bq, true);
 	power_supply_changed(bq->fc2_psy);
-	bq_err("Resume successfully!");
+	bq_dbg("Resume successfully!");
 
 	return 0;
 }

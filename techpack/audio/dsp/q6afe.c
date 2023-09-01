@@ -41,6 +41,9 @@ static int apr_err_count = 0;
 #define AFE_PARAM_ID_AWDSP_TX_SET_ENABLE	(0x10013D13)
 #define AFE_PARAM_ID_AWDSP_RX_PARAMS            (0x10013D12)
 
+#undef pr_info
+#define pr_info pr_debug
+
 static int g_aw_tx_port_id = 0;
 static int g_aw_rx_port_id = 0;
 
