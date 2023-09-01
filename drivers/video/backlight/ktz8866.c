@@ -75,7 +75,7 @@ static int ktz8866_backlight_update_status(struct backlight_device *backlight)
 
 	mutex_lock(&g_ktz8866_led.lock);
 
-	dev_warn(&bd->client->dev,
+	dev_dbg(&bd->client->dev,
 		"ktz8866 backlight 0x%02x ,exponential brightness %d \n", brightness, exponential_bl);
 
 	if (!g_ktz8866_led.ktz8866_status && brightness > 0) {
