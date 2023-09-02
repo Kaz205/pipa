@@ -1899,9 +1899,7 @@ int q6lsm_deregister_sound_model(struct lsm_client *client)
 		pr_err("%s: session[%d]", __func__, client->session);
 		return -EINVAL;
 	}
-#if defined(CONFIG_TARGET_PRODUCT_PIPA)
 	client->model_reged = false;
-#endif
 	memset(&cmd, 0, sizeof(cmd));
 	q6lsm_add_hdr(client, &cmd.hdr, sizeof(cmd.hdr), false);
 	cmd.hdr.opcode = LSM_SESSION_CMD_DEREGISTER_SOUND_MODEL;
