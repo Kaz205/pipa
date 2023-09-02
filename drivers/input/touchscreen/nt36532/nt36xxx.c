@@ -3017,17 +3017,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	ts->client = client;
 	spi_set_drvdata(client, ts);
 
-	ts->pm_spi_req.type = PM_QOS_REQ_AFFINE_IRQ;
-	ts->pm_spi_req.irq = geni_spi_get_master_irq(client);
-	irq_set_perf_affinity(ts->pm_spi_req.irq, IRQF_PERF_AFFINE);
-	pm_qos_add_request(&ts->pm_spi_req, PM_QOS_CPU_DMA_LATENCY,
-			PM_QOS_DEFAULT_VALUE);
-
-	ts->pm_touch_req.type = PM_QOS_REQ_AFFINE_IRQ;
-	ts->pm_touch_req.irq = ts->client->irq;
-	pm_qos_add_request(&ts->pm_touch_req, PM_QOS_CPU_DMA_LATENCY,
-			PM_QOS_DEFAULT_VALUE);
-
 	//---prepare for spi parameter---
 	if (ts->client->master->flags & SPI_MASTER_HALF_DUPLEX) {
 		NVT_ERR("Full duplex not supported by master\n");
@@ -3427,6 +3416,17 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 
 	bTouchIsAwake = 1;
 	NVT_LOG("end\n");
+
+	ts->pm_spi_req.type = PM_QOS_REQ_AFFINE_IRQ;
+	ts->pm_spi_req.irq = geni_spi_get_master_irq(client);
+	irq_set_perf_affinity(ts->pm_spi_req.irq, IRQF_PERF_AFFINE);
+	pm_qos_add_request(&ts->pm_spi_req, PM_QOS_CPU_DMA_LATENCY,
+			PM_QOS_DEFAULT_VALUE);
+
+	ts->pm_touch_req.type = PM_QOS_REQ_AFFINE_IRQ;
+	ts->pm_touch_req.irq = client->irq;
+	pm_qos_add_request(&ts->pm_touch_req, PM_QOS_CPU_DMA_LATENCY,
+			PM_QOS_DEFAULT_VALUE);
 
 	nvt_irq_enable(true);
 
