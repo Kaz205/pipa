@@ -531,18 +531,26 @@ static int dsi_panel_power_off(struct dsi_panel *panel)
 
 	if (panel->mi_cfg.is_tddi_flag) {
 		if (!panel->mi_cfg.tddi_doubleclick_flag || panel->mi_cfg.panel_dead_flag) {
-			if (gpio_is_valid(panel->reset_config.reset_gpio)) {
-				gpio_set_value(panel->reset_config.reset_gpio, 0);
+				rc = dsi_pwr_enable_regulator(&panel->power_info, true);
 
-				if (gpio_is_valid(panel->reset_config.tp_reset_gpio) && !panel->reset_gpio_always_on
-					&& panel->mi_cfg.panel_id == 0x4C38314100420400){
-					rc=gpio_direction_output(panel->reset_config.tp_reset_gpio, 0);
-					if (rc){
-							DSI_ERR("unable to set direction for gpio [%d]\n",
-							panel->reset_config.tp_reset_gpio);
+					if (gpio_is_valid(panel->reset_config.tp_reset_gpio) && !panel->reset_gpio_always_on
+						&& panel->mi_cfg.panel_id == 0x4C38314100420400){
+						rc=gpio_direction_output(panel->reset_config.tp_reset_gpio, 1);
+						if (rc){
+								DSI_ERR("unable to set direction for gpio [%d]\n",
+								panel->reset_config.tp_reset_gpio);
+						}
 					}
-				}
+					if (panel->mi_cfg.panel_dead_flag)
+						panel->mi_cfg.panel_dead_flag = false;
+				} else if(panel->mi_cfg.tddi_doubleclick_flag && 
+						((panel->mi_cfg.panel_id == 0x4D38324100360200)|| 
+						(panel->mi_cfg.panel_id == 0x4D38324100420200))) {
+					mi_dsi_pwr_enable_vregs(&panel->power_info, true, 1);
+					mi_dsi_pwr_enable_vregs(&panel->power_info, true, 2);
 			}
+		} else {
+				rc = dsi_pwr_enable_regulator(&panel->power_info, true);
 		}
 	} else {
 		if (gpio_is_valid(panel->reset_config.reset_gpio) &&
@@ -572,12 +580,22 @@ static int dsi_panel_power_off(struct dsi_panel *panel)
 		       rc);
 	}
 
-	if (!panel->mi_cfg.is_tddi_flag
-			|| (!panel->mi_cfg.tddi_doubleclick_flag || panel->mi_cfg.panel_dead_flag)) {
+	if (panel->mi_cfg.is_tddi_flag) {
+		if(!panel->mi_cfg.tddi_doubleclick_flag || panel->mi_cfg.panel_dead_flag) {
+			rc = dsi_pwr_enable_regulator(&panel->power_info, false);
+			if (rc)
+				pr_err("[%s] failed to enable vregs, rc=%d\n", panel->name, rc);
+		} else if(panel->mi_cfg.tddi_doubleclick_flag &&
+				((panel->mi_cfg.panel_id == 0x4D38324100360200)||
+				(panel->mi_cfg.panel_id == 0x4D38324100420200))) {
+			DSI_INFO("mi_dsi_pwr_enable_vregs_off\n");
+			mi_dsi_pwr_enable_vregs(&panel->power_info, false, 2);
+			mi_dsi_pwr_enable_vregs(&panel->power_info, false, 1);
+		}
+	} else {
 		rc = dsi_pwr_enable_regulator(&panel->power_info, false);
 		if (rc)
-			DSI_ERR("[%s] failed to enable vregs, rc=%d\n",
-					panel->name, rc);
+			pr_err("[%s] failed to enable vregs, rc=%d\n", panel->name, rc);
 	}
 
 	return rc;
@@ -953,7 +971,8 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 		return rc;
 	}
 
-	if (0 == bl_lvl && (panel->host_config.cphy_strength || panel->mi_cfg.panel_id == 0x4C38314100420400)){
+	if (0 == bl_lvl && (panel->host_config.cphy_strength || panel->mi_cfg.panel_id == 0x4C38314100420400 || 
+		panel->mi_cfg.panel_id == 0x4D38324100360200 || panel->mi_cfg.panel_id == 0x4D38324100420200)){
 		dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_INSERT_BLACK);
 		usleep_range((6 * 1000),(6 * 1000) + 10);
 	}
@@ -1004,7 +1023,8 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 			mi_cfg->dimming_state = STATE_NONE;
 	}
 
-	if (mi_cfg->last_bl_level == 0 && bl_lvl && (panel->host_config.cphy_strength || panel->mi_cfg.panel_id == 0x4C38314100420400)){
+	if (mi_cfg->last_bl_level == 0 && bl_lvl && (panel->host_config.cphy_strength || panel->mi_cfg.panel_id == 0x4C38314100420400 ||
+		panel->mi_cfg.panel_id == 0x4D38324100360200 || panel->mi_cfg.panel_id == 0x4D38324100420200)){
 		DSI_INFO("disable insert black \n");
 		dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_DISABLE_INSERT_BLACK);
 	}
@@ -1533,7 +1553,16 @@ static int dsi_panel_parse_misc_host_config(struct dsi_host_common_cfg *host,
 		host->dma_sched_window = 0;
 	else
 		host->dma_sched_window = window;
- 
+
+	rc = utils->read_u32(utils->data, "qcom,mdss-dsi-phy-voltage", &val);
+	if (!rc) {
+		host->phy_voltage = val;
+		pr_info("[%s] phy_voltage = %d\n", name, val);
+	} else {
+		host->phy_voltage = 0;
+		pr_info("[%s] phy_voltage default value = %d\n", name, val);
+	}
+
 	DSI_DEBUG("[%s] DMA scheduling parameters Line: %d Window: %d\n", name,
 		host->dma_sched_line, host->dma_sched_window);
 
@@ -3078,8 +3107,12 @@ int dsi_dsc_populate_static_param(struct msm_display_dsc_info *dsc)
 
 	if (dsc->version == 0x11 && dsc->scr_rev == 0x1)
 		dsc->first_line_bpg_offset = 15;
-	else
-		dsc->first_line_bpg_offset = 12;
+	else{
+		if(dsc->panel_id == 0x4D38324100360200 || dsc->panel_id == 0x4D38324100420200)
+			dsc->first_line_bpg_offset = 13;
+		else
+			dsc->first_line_bpg_offset = 12;
+	}
 
 	dsc->edge_factor = 6;
 	dsc->tgt_offset_hi = 3;
@@ -3270,6 +3303,7 @@ static int dsi_panel_parse_dsc_params(struct dsi_display_mode *mode,
 				struct dsi_parser_utils *utils)
 {
 	u32 data;
+	u64 data_id;
 	int rc = -EINVAL;
 	int intf_width;
 	const char *compression;
@@ -3305,6 +3339,15 @@ static int dsi_panel_parse_dsc_params(struct dsi_display_mode *mode,
 			goto error;
 		}
 	}
+
+	rc = utils->read_u64(utils->data, "mi,dsc-panel-id", &data_id);
+	if (rc) {
+		data_id = 0;
+		pr_info("mi,dsc-panel-id not specified\n");
+	} else {
+		pr_info("mi,dsc-panel-id is 0x%llx\n", data_id);
+	}
+	priv_info->dsc.panel_id = data_id;
 
 	rc = utils->read_u32(utils->data, "qcom,mdss-dsc-scr-version", &data);
 	if (rc) {
@@ -5071,7 +5114,7 @@ int dsi_panel_switch(struct dsi_panel *panel)
 		return -EINVAL;
 	}
 
-	if (panel->mi_cfg.panel_id == 0x4C334100420200 && panel->mi_cfg.in_aod) {
+	if ((panel->mi_cfg.panel_id == 0x4C334100420200 || panel->mi_cfg.panel_id == 0x4A3200420201) && panel->mi_cfg.in_aod) {
 		DSI_INFO("In AOD, skip set fps \n");
 		return rc;
 	}
@@ -5233,6 +5276,13 @@ error:
 			DSI_ERR("[%s] failed to update TP fps code setting, rc=%d\n",
 				panel->name, rc);
 		}
+	} else if((panel->mi_cfg.panel_id == 0x4D38324100360200)||
+			(panel->mi_cfg.panel_id == 0x4D38324100420200)) {
+				rc = dsi_panel_match_fps_pen_setting(panel, panel->cur_mode);
+				if (rc) {
+					DSI_ERR("[%s] failed to update TP fps code setting, rc=%d\n",
+						panel->name, rc);
+				}
 	}
 
 	mutex_unlock(&panel->panel_lock);

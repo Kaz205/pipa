@@ -2009,6 +2009,12 @@ int sde_cp_crtc_set_property(struct drm_crtc *crtc,
 		return -EINVAL;
 	}
 
+	if (!strncmp(property->name, "mi_fod_sync_info", sizeof("mi_fod_sync_info")) ||
+		!strncmp(property->name, "SDE_DSPP_PCC_V4", sizeof("SDE_DSPP_PCC_V4"))) {
+		pr_debug("prop_name=%s prop_id=%d prop_val=%llu, crtc_name=%s crtc_id=%d\n",
+			property->name, property->base.id, val, sde_crtc->name, crtc->base.id);
+	}
+
 	if (!strncmp(property->name, "mi_fod_sync_info", sizeof("mi_fod_sync_info"))
 		&& pcc_info.crtc_id == crtc->base.id) {
 		if ((val & MI_DIMLAYER_FOD_HBM_OVERLAY) != (pcc_info.fod_val & MI_DIMLAYER_FOD_HBM_OVERLAY)) {
