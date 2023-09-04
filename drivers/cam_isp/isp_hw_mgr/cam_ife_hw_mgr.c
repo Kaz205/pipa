@@ -3461,7 +3461,7 @@ static int cam_ife_mgr_config_hw(void *hw_mgr_priv,
 		if (cfg->init_packet) {
 			rc = wait_for_completion_timeout(
 				&ctx->config_done_complete,
-				msecs_to_jiffies(30));
+				msecs_to_jiffies(100));
 			if (rc <= 0) {
 				CAM_ERR(CAM_ISP,
 					"config done completion timeout for req_id=%llu rc=%d ctx_index %d",
@@ -3718,24 +3718,21 @@ static int cam_ife_mgr_stop_hw(void *hw_mgr_priv, void *stop_hw_args)
 
 	cam_tasklet_stop(ctx->common.tasklet_info);
 
-	cam_ife_mgr_pause_hw(ctx);
+    cam_ife_mgr_pause_hw(ctx);
 
-	rc = wait_for_completion_timeout(
-		&ctx->config_done_complete,
-		msecs_to_jiffies(300));
-	if (rc <= 0) {
-		CAM_WARN(CAM_ISP,
-			"config done completion timeout for last applied req_id=%llu rc=%d ctx_index %d",
-			ctx->applied_req_id, rc, ctx->ctx_index);
-		rc = -ETIMEDOUT;
-	} else {
-		CAM_DBG(CAM_ISP,
-			"config done Success for req_id=%llu ctx_index %d",
-			ctx->applied_req_id, ctx->ctx_index);
-		rc = 0;
-	}
-
-	if (stop_isp->stop_only)
+    rc = wait_for_completion_timeout(&ctx->config_done_complete,msecs_to_jiffies(300));
+    if (rc <= 0) {
+        CAM_WARN(CAM_ISP,
+                 "config done completion timeout for last applied req_id=%llu rc=%d ctx_index %d",
+                 ctx->applied_req_id, rc, ctx->ctx_index);
+        rc = -ETIMEDOUT;
+    } else {
+        CAM_DBG(CAM_ISP,
+                "config done Success for req_id=%llu ctx_index %d",
+                ctx->applied_req_id, ctx->ctx_index);
+        rc = 0;
+    }
+    if (stop_isp->stop_only)
 		goto end;
 
 	if (cam_cdm_stream_off(ctx->cdm_handle))

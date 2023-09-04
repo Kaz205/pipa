@@ -138,6 +138,7 @@ enum msm_camera_power_seq_type {
 	SENSOR_VAF_PWDM,
 	SENSOR_CUSTOM_REG1,
 	SENSOR_CUSTOM_REG2,
+	SENSOR_CUSTOM_REG3,//xiaomi add liuqinhong@xiaomi.com
 	SENSOR_RESET,
 	SENSOR_STANDBY,
 	SENSOR_CUSTOM_GPIO1,
@@ -168,7 +169,8 @@ enum cam_eeprom_packet_opcodes {
 
 enum cam_ois_packet_opcodes {
 	CAM_OIS_PACKET_OPCODE_INIT,
-	CAM_OIS_PACKET_OPCODE_OIS_CONTROL
+	CAM_OIS_PACKET_OPCODE_OIS_CONTROL,
+	CAM_OIS_PACKET_OPCODE_OIS_GETDATA
 };
 
 enum msm_bus_perf_setting {
@@ -375,6 +377,7 @@ enum msm_camera_vreg_name_t {
 	CAM_VAF,
 	CAM_V_CUSTOM1,
 	CAM_V_CUSTOM2,
+	CAM_V_CUSTOM3,//xiaomi add liuqinhong@xiaomi.com
 	CAM_VREG_MAX,
 };
 

@@ -660,19 +660,18 @@ irqreturn_t cam_hw_cdm_irq(int irq_num, void *data)
 				&payload->irq_status)) {
 			CAM_ERR(CAM_CDM, "Failed to read CDM HW IRQ status");
 		}
-		if (!payload->irq_status) {
-			CAM_ERR_RATE_LIMIT(CAM_CDM, "Invalid irq received\n");
-			kfree(payload);
-			return IRQ_HANDLED;
-		}
-		if (cam_cdm_write_hw_reg(cdm_hw, CDM_IRQ_CLEAR,
-			payload->irq_status))
-			CAM_ERR(CAM_CDM, "Failed to Write CDM HW IRQ Clear");
-		if (cam_cdm_write_hw_reg(cdm_hw, CDM_IRQ_CLEAR_CMD, 0x01))
-			CAM_ERR(CAM_CDM, "Failed to Write CDM HW IRQ cmd");
-
-		if (payload->irq_status &
-			CAM_CDM_IRQ_STATUS_INFO_INLINE_IRQ_MASK) {
+        if (!payload->irq_status) {
+            CAM_ERR_RATE_LIMIT(CAM_CDM, "Invalid irq received\n");
+            kfree(payload);
+            return IRQ_HANDLED;
+        }
+        if (cam_cdm_write_hw_reg(cdm_hw, CDM_IRQ_CLEAR,
+                                 payload->irq_status))
+            CAM_ERR(CAM_CDM, "Failed to Write CDM HW IRQ Clear");
+        if (cam_cdm_write_hw_reg(cdm_hw, CDM_IRQ_CLEAR_CMD, 0x01))
+            CAM_ERR(CAM_CDM, "Failed to Write CDM HW IRQ cmd");
+        if (payload->irq_status &
+            CAM_CDM_IRQ_STATUS_INFO_INLINE_IRQ_MASK) {
 			if (cam_cdm_read_hw_reg(cdm_hw, CDM_IRQ_USR_DATA,
 				&payload->irq_data)) {
 				CAM_ERR(CAM_CDM,
