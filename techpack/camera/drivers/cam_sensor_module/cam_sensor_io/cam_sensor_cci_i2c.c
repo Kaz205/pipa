@@ -177,7 +177,7 @@ static int32_t cam_cci_i2c_compare(struct cam_sensor_cci_client *client,
 	if (rc < 0)
 		return rc;
 
-	reg_data = reg_data & 0xFFFF;
+	reg_data = reg_data & 0xFFFFFFFF;
 	if (data == (reg_data & ~data_mask))
 		return I2C_COMPARE_MATCH;
 	return I2C_COMPARE_MISMATCH;
