@@ -3358,10 +3358,9 @@ static int cam_ife_mgr_config_hw(void *hw_mgr_priv,
 	struct cam_ife_hw_mgr_ctx *ctx;
 	struct cam_isp_prepare_hw_update_data *hw_update_data;
 
+	CAM_DBG(CAM_ISP, "Enter");
 	if (!hw_mgr_priv || !config_hw_args) {
-		CAM_ERR(CAM_ISP,
-			"Invalid arguments, hw_mgr_priv=%pK, config_hw_args=%pK",
-			hw_mgr_priv, config_hw_args);
+		CAM_ERR(CAM_ISP, "Invalid arguments");
 		return -EINVAL;
 	}
 
@@ -3369,28 +3368,21 @@ static int cam_ife_mgr_config_hw(void *hw_mgr_priv,
 	ctx = (struct cam_ife_hw_mgr_ctx *)cfg->ctxt_to_hw_map;
 	if (!ctx) {
 		CAM_ERR(CAM_ISP, "Invalid context is used");
-		return -EINVAL;
+		return -EPERM;
 	}
 
 	if (!ctx->ctx_in_use || !ctx->cdm_cmd) {
-		CAM_ERR(CAM_ISP,
-			"Invalid context parameters : ctx_in_use=%d, cdm_cmd=%pK",
-			ctx->ctx_in_use, ctx->cdm_cmd);
+		CAM_ERR(CAM_ISP, "Invalid context parameters");
 		return -EPERM;
 	}
-
-	if (atomic_read(&ctx->overflow_pending)) {
-		CAM_DBG(CAM_ISP,
-			"Ctx[%pK][%d] Overflow pending, cannot apply req %llu",
-			ctx, ctx->ctx_index, cfg->request_id);
-		return -EPERM;
-	}
+	if (atomic_read(&ctx->overflow_pending))
+		return -EINVAL;
 
 	hw_update_data = (struct cam_isp_prepare_hw_update_data  *) cfg->priv;
 	hw_update_data->ife_mgr_ctx = ctx;
 
-	CAM_DBG(CAM_ISP, "Ctx[%pK][%d] : Applying Req %lld, init_packet=%d",
-		ctx, ctx->ctx_index, cfg->request_id, cfg->init_packet);
+	CAM_DBG(CAM_ISP, "Ctx[%pK][%d] : Applying Req %lld",
+		ctx, ctx->ctx_index, cfg->request_id);
 
 	for (i = 0; i < CAM_IFE_HW_NUM_MAX; i++) {
 		if (hw_update_data->bw_config_valid[i] == true) {
@@ -3462,9 +3454,7 @@ static int cam_ife_mgr_config_hw(void *hw_mgr_priv,
 		atomic_set(&ctx->cdm_done, 0);
 		rc = cam_cdm_submit_bls(ctx->cdm_handle, cdm_cmd);
 		if (rc) {
-			CAM_ERR(CAM_ISP,
-				"Failed to apply the configs for req %llu, rc %d",
-				cfg->request_id, rc);
+			CAM_ERR(CAM_ISP, "Failed to apply the configs");
 			return rc;
 		}
 
@@ -3964,16 +3954,11 @@ static int cam_ife_mgr_start_hw(void *hw_mgr_priv, void *start_hw_args)
 	}
 
 start_only:
-
-	atomic_set(&ctx->overflow_pending, 0);
-
 	/* Apply initial configuration */
 	CAM_DBG(CAM_ISP, "Config HW");
 	rc = cam_ife_mgr_config_hw(hw_mgr_priv, &start_isp->hw_config);
 	if (rc) {
-		CAM_ERR(CAM_ISP,
-			"Config HW failed, start_only=%d, rc=%d",
-			start_isp->start_only, rc);
+		CAM_ERR(CAM_ISP, "Config HW failed");
 		goto cdm_streamoff;
 	}
 
