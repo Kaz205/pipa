@@ -3226,6 +3226,18 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	//---set int-pin & request irq---
 	client->irq = gpio_to_irq(ts->irq_gpio);
 	if (client->irq) {
+		/* Init PM QoS before registering the IRQ */
+		ts->pm_spi_req.type = PM_QOS_REQ_AFFINE_IRQ;
+		ts->pm_spi_req.irq = geni_spi_get_master_irq(client);
+		irq_set_perf_affinity(ts->pm_spi_req.irq, IRQF_PERF_AFFINE);
+		pm_qos_add_request(&ts->pm_spi_req, PM_QOS_CPU_DMA_LATENCY,
+				PM_QOS_DEFAULT_VALUE);
+
+		ts->pm_touch_req.type = PM_QOS_REQ_AFFINE_IRQ;
+		ts->pm_touch_req.irq = client->irq;
+		pm_qos_add_request(&ts->pm_touch_req, PM_QOS_CPU_DMA_LATENCY,
+				PM_QOS_DEFAULT_VALUE);
+
 		NVT_LOG("int_trigger_type=%d\n", ts->int_trigger_type);
 		ts->irq_enabled = true;
 		ret = request_threaded_irq(client->irq, NULL, nvt_ts_work_func,
@@ -3416,17 +3428,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 
 	bTouchIsAwake = 1;
 	NVT_LOG("end\n");
-
-	ts->pm_spi_req.type = PM_QOS_REQ_AFFINE_IRQ;
-	ts->pm_spi_req.irq = geni_spi_get_master_irq(client);
-	irq_set_perf_affinity(ts->pm_spi_req.irq, IRQF_PERF_AFFINE);
-	pm_qos_add_request(&ts->pm_spi_req, PM_QOS_CPU_DMA_LATENCY,
-			PM_QOS_DEFAULT_VALUE);
-
-	ts->pm_touch_req.type = PM_QOS_REQ_AFFINE_IRQ;
-	ts->pm_touch_req.irq = client->irq;
-	pm_qos_add_request(&ts->pm_touch_req, PM_QOS_CPU_DMA_LATENCY,
-			PM_QOS_DEFAULT_VALUE);
 
 	nvt_irq_enable(true);
 
