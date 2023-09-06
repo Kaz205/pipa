@@ -912,6 +912,7 @@ static int cam_fd_mgr_util_submit_frame(void *priv, void *data)
 	hw_device->ready_to_process = false;
 	hw_device->cur_hw_ctx = hw_ctx;
 	hw_device->req_id = frame_req->request_id;
+	list_add_tail(&frame_req->list, &hw_mgr->frame_processing_list);
 	mutex_unlock(&hw_device->lock);
 	mutex_unlock(&hw_mgr->frame_req_mutex);
 
@@ -1276,6 +1277,8 @@ static int cam_fd_mgr_hw_start(void *hw_mgr_priv, void *mgr_start_args)
 		CAM_ERR(CAM_FD, "Error in getting device %d", rc);
 		return rc;
 	}
+
+	hw_device->ready_to_process = true;
 
 	fd_hw = (struct cam_hw_info *)hw_device->hw_intf->hw_priv;
 	fd_core = (struct cam_fd_core *)fd_hw->core_info;
@@ -1699,6 +1702,8 @@ static int cam_fd_mgr_hw_stop(void *hw_mgr_priv, void *mgr_stop_args)
 
 	CAM_DBG(CAM_FD, "FD Device ready_to_process = %d",
 		hw_device->ready_to_process);
+
+	hw_device->ready_to_process = true;
 
 	if (hw_device->hw_intf->hw_ops.deinit) {
 		hw_deinit_args.hw_ctx = hw_ctx;
