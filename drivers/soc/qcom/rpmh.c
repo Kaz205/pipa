@@ -397,11 +397,9 @@ static int invalidate_batch(struct rpmh_ctrlr *ctrlr)
 	INIT_LIST_HEAD(&ctrlr->batch_cache);
 	raw_spin_unlock(&ctrlr->cache_lock);
 
-	mutex_lock(&ctrlr->cache_count_lock);
 	for (i = 0; ctrlr->cache_count; i++)
 		kfree(tmp[i]);
 	ctrlr->cache_count = 0;
-	mutex_unlock(&ctrlr->cache_count_lock);
 
 	return 0;
 }
