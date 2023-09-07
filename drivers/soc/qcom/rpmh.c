@@ -154,19 +154,19 @@ static struct cache_req *cache_rpm_request(struct rpmh_ctrlr *ctrlr,
 					   enum rpmh_state state,
 					   struct tcs_cmd *cmd)
 {
-	struct cache_req *req;
+	struct cache_req *req, *new_req = NULL;
 
 	raw_spin_lock(&ctrlr->cache_lock);
 	req = __find_req(ctrlr, cmd->addr);
 	if (req)
 		goto existing;
+	raw_spin_unlock(&ctrlr->cache_lock);
 
-	req = kzalloc(sizeof(*req), GFP_ATOMIC);
-	if (!req) {
-		req = ERR_PTR(-ENOMEM);
-		goto unlock;
-	}
+	new_req = kzalloc(sizeof(*req), GFP_ATOMIC);
+	if (!new_req)
+		return ERR_PTR(-ENOMEM);
 
+	raw_spin_lock(&ctrlr->cache_lock);
 	req->addr = cmd->addr;
 	req->sleep_val = req->wake_val = UINT_MAX;
 	INIT_LIST_HEAD(&req->list);
@@ -196,9 +196,10 @@ existing:
 		break;
 	}
 
-unlock:
 	raw_spin_unlock(&ctrlr->cache_lock);
 
+	if (new_req && new_req != req)
+		kfree(new_req);
 	return req;
 }
 
