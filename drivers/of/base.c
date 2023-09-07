@@ -145,6 +145,22 @@ static void __of_free_phandle_cache(void)
 	phandle_cache = NULL;
 }
 
+int of_free_phandle_cache(void)
+{
+	unsigned long flags;
+
+	raw_spin_lock_irqsave(&devtree_lock, flags);
+
+	__of_free_phandle_cache();
+
+	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+
+	return 0;
+}
+#if !defined(CONFIG_MODULES)
+late_initcall_sync(of_free_phandle_cache);
+#endif
+
 /*
  * Caller must hold devtree_lock.
  */
