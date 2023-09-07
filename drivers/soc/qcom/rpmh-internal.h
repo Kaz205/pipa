@@ -73,10 +73,12 @@ struct rpmh_request {
  */
 struct rpmh_ctrlr {
 	struct list_head cache;
-	spinlock_t cache_lock;
+	raw_spinlock_t cache_lock;
 	bool dirty;
 	struct list_head batch_cache;
 	bool in_solver_mode;
+	int cache_count;
+	struct mutex cache_count_lock;
 };
 
 /**
