@@ -508,6 +508,22 @@ ifneq ($(KBUILD_SRC),)
 	    $(srctree) $(objtree) $(VERSION) $(PATCHLEVEL)
 endif
 
+ifdef CONFIG_LTO_GCC
+LTO_CFLAGS	:= -flto -flto=jobserver -fipa-pta -fno-fat-lto-objects \
+		   -fuse-linker-plugin -fwhole-program
+KBUILD_CFLAGS	+= $(LTO_CFLAGS)
+LTO_LDFLAGS	:= $(LTO_CFLAGS) -Wno-lto-type-mismatch -Wno-psabi \
+		   -Wno-stringop-overflow -flinker-output=nolto-rel
+LDFINAL		:= $(CONFIG_SHELL) $(srctree)/scripts/gcc-ld $(LTO_LDFLAGS)
+AR		:= $(CROSS_COMPILE)gcc-ar
+NM		:= $(CROSS_COMPILE)gcc-nm
+DISABLE_LTO	:= -fno-lto
+export DISABLE_LTO LDFINAL
+else
+LDFINAL		:= $(LD)
+export LDFINAL
+endif
+
 ifeq ($(cc-name),clang)
 # Individual arch/{arch}/Makefiles should use -EL/-EB to set intended
 # endianness and -m32/-m64 to set word size based on Kconfigs instead of
@@ -624,22 +640,6 @@ ifeq ($(MAKECMDGOALS),)
 endif
 
 export KBUILD_MODULES KBUILD_BUILTIN
-
-ifdef CONFIG_LTO_GCC
-LTO_CFLAGS	:= -flto -flto=jobserver -fipa-pta -fno-fat-lto-objects \
-		   -fuse-linker-plugin -fwhole-program
-KBUILD_CFLAGS	+= $(LTO_CFLAGS)
-LTO_LDFLAGS	:= $(LTO_CFLAGS) -Wno-lto-type-mismatch -Wno-psabi \
-		   -Wno-stringop-overflow -flinker-output=nolto-rel
-LDFINAL		:= $(CONFIG_SHELL) $(srctree)/scripts/gcc-ld $(LTO_LDFLAGS)
-AR		:= $(CROSS_COMPILE)gcc-ar
-NM		:= $(CROSS_COMPILE)gcc-nm
-DISABLE_LTO	:= -fno-lto
-export DISABLE_LTO LDFINAL
-else
-LDFINAL		:= $(LD)
-export LDFINAL
-endif
 
 ifeq ($(KBUILD_EXTMOD),)
 # Objects we will link into vmlinux / subdirs we need to visit
