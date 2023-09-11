@@ -2,7 +2,7 @@ export ARCH=arm64
 export SUBARCH=arm64
 export ak=$HOME/AnyKernel3
 export CROSS_COMPILE=/usr/bin/aarch64-linux-gnu-
-export CROSS_COMPILE_COMPAT=/usr/bin/arm-none-eabi-
+export CROSS_COMPILE_ARM32=/usr/bin/arm-none-eabi-
 
 NAME=$(git describe --exact-match --tags 2> /dev/null || git rev-parse --short HEAD)
 git submodule init && git submodule update
