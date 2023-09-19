@@ -34,6 +34,7 @@
 *.o.*
 *.order
 *.patch
+*.pyc
 *.s
 *.so
 *.so.dbg
@@ -138,3 +139,6 @@ kernel/configs/android-*.cfg
 
 # Object directory
 out/
+
+# Prebuilts
+prebuilts/
