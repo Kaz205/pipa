@@ -54,7 +54,7 @@ KBUILD_CFLAGS	+= -mno-implicit-float
 else
 KBUILD_CFLAGS	+= -mgeneral-regs-only
 ifeq ($(CONFIG_ARCH_KONA), y)
-KBUILD_CFLAGS	+= -mcpu=cortex-a76.cortex-a55
+KBUILD_CFLAGS	+= -mcpu=cortex-a76.cortex-a55+crypto+dotprod
 endif
 endif
 KBUILD_CFLAGS	+= $(lseinstr) $(brokengasinst) $(compat_vdso)
