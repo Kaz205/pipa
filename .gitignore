@@ -34,6 +34,7 @@
 *.o.*
 *.order
 *.patch
+*.pyc
 *.s
 *.so
 *.so.dbg
@@ -143,3 +144,6 @@ Android.bp
 
 # Object directory
 out/
+
+# Prebuilts
+prebuilts/
