@@ -1355,11 +1355,11 @@ static int32_t nvt_parse_dt(struct device *dev)
 #ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
 	ret = of_property_read_u32_array(np, "novatek,touch-game-param-config1", ts->gamemode_config[0], 5);
 	if (ret) {
-		NVT_LOG("Failed to get touch-game-param-config1\n");
+		NVT_ERR("Failed to get touch-game-param-config1\n");
 		SPI_RD_FAST_ADDR = 0;
 		ret = 0;
 	} else {
-		NVT_LOG("read touch gamemode parameter config1:[%d, %d, %d, %d, %d]",
+		NVT_ERR("read touch gamemode parameter config1:[%d, %d, %d, %d, %d]",
 		ts->gamemode_config[0][0], ts->gamemode_config[0][1],
 		ts->gamemode_config[0][2], ts->gamemode_config[0][3],
 		ts->gamemode_config[0][4]);
@@ -1367,11 +1367,11 @@ static int32_t nvt_parse_dt(struct device *dev)
 
 	ret = of_property_read_u32_array(np, "novatek,touch-game-param-config2", ts->gamemode_config[1], 5);
 	if (ret) {
-		NVT_LOG("Failed to get touch-game-param-config2\n");
+		NVT_ERR("Failed to get touch-game-param-config2\n");
 		SPI_RD_FAST_ADDR = 0;
 		ret = 0;
 	} else {
-		NVT_LOG("read touch gamemode parameter config2:[%d, %d, %d, %d, %d]",
+		NVT_ERR("read touch gamemode parameter config2:[%d, %d, %d, %d, %d]",
 		ts->gamemode_config[1][0], ts->gamemode_config[1][1],
 		ts->gamemode_config[1][2], ts->gamemode_config[1][3],
 		ts->gamemode_config[1][4]);
@@ -1379,11 +1379,11 @@ static int32_t nvt_parse_dt(struct device *dev)
 
 	ret = of_property_read_u32_array(np, "novatek,touch-game-param-config3", ts->gamemode_config[2], 5);
 	if (ret) {
-		NVT_LOG("Failed to get touch-game-param-config3\n");
+		NVT_ERR("Failed to get touch-game-param-config3\n");
 		SPI_RD_FAST_ADDR = 0;
 		ret = 0;
 	} else {
-		NVT_LOG("read touch gamemode parameter config3:[%d, %d, %d, %d, %d]",
+		NVT_ERR("read touch gamemode parameter config3:[%d, %d, %d, %d, %d]",
 		ts->gamemode_config[2][0], ts->gamemode_config[2][1],
 		ts->gamemode_config[2][2], ts->gamemode_config[2][3],
 		ts->gamemode_config[2][4]);
@@ -2319,7 +2319,7 @@ static void nvt_init_touchmode_data(void)
 	xiaomi_touch_interfaces.touch_mode[Touch_Resist_RF][GET_CUR_VALUE] = 0;
 
 	for (i = 0; i < Touch_Mode_NUM; i++) {
-		NVT_LOG("mode:%d, set cur:%d, get cur:%d, def:%d min:%d max:%d\n",
+		NVT_ERR("mode:%d, set cur:%d, get cur:%d, def:%d min:%d max:%d\n",
 			i,
 			xiaomi_touch_interfaces.touch_mode[i][SET_CUR_VALUE],
 			xiaomi_touch_interfaces.touch_mode[i][GET_CUR_VALUE],
@@ -2415,29 +2415,20 @@ static void update_touchfeature_value_work(struct work_struct *work) {
 			ts->game_mode_enable = temp_set_value;
 			switch_pen_input_device();
 		}
-		NVT_LOG("set mode:%d = %d", mode_type[i], temp_set_value);
+		NVT_ERR("set mode:%d = %d", mode_type[i], temp_set_value);
 	}
 	/* orientation set */
 	temp_get_value = xiaomi_touch_interfaces.touch_mode[Touch_Panel_Orientation][GET_CUR_VALUE];
 	temp_set_value = xiaomi_touch_interfaces.touch_mode[Touch_Panel_Orientation][SET_CUR_VALUE];
 	if (temp_get_value != temp_set_value) {
-		if (temp_set_value == PANEL_ORIENTATION_DEGREE_0) {
-			nvt_game_value[0] = 0xBA;
-		} else if (temp_set_value == PANEL_ORIENTATION_DEGREE_90) {
-			nvt_game_value[0] = 0xBC;
-		} else if (temp_set_value == PANEL_ORIENTATION_DEGREE_270) {
-			nvt_game_value[0] = 0xBB;
-		} else if (temp_set_value == PANEL_ORIENTATION_DEGREE_180) {
-			nvt_game_value[0] = 0xBD;
-		}
-		nvt_game_value[1] = 0;
+		nvt_game_value[1] = 0xBA;
 		ret = nvt_touchfeature_set(nvt_game_value);
 		if (ret < 0) {
 			NVT_ERR("change panel orientation mode fail");
 			return;
 		}
 		xiaomi_touch_interfaces.touch_mode[Touch_Panel_Orientation][GET_CUR_VALUE] = temp_set_value;
-		NVT_LOG("set mode:%d = %d", Touch_Panel_Orientation, temp_set_value);
+		NVT_ERR("set mode:%d = %d, %d", Touch_Panel_Orientation, temp_set_value, nvt_game_value);
 	}
 
 	/* RF set */
@@ -2456,7 +2447,7 @@ static void update_touchfeature_value_work(struct work_struct *work) {
 			return;
 		}
 		xiaomi_touch_interfaces.touch_mode[Touch_Resist_RF][GET_CUR_VALUE] = temp_set_value;
-		NVT_LOG("set mode:%d = %d", Touch_Resist_RF, temp_set_value);
+		NVT_ERR("set mode:%d = %d", Touch_Resist_RF, temp_set_value);
 	}
 	NVT_LOG("exit");
 }
@@ -3377,6 +3368,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 		goto err_create_set_touchfeature_work_queue;
 	}
 	INIT_WORK(&ts->set_touchfeature_work, update_touchfeature_value_work);
+	NVT_ERR("create set touch feature workqueue success");
 #endif
 
 #if defined(NVT_PEN_CONNECT_STRATEGY)
@@ -3986,7 +3978,7 @@ static int32_t nvt_ts_resume(struct device *dev)
 	}
 
 #ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
-	NVT_LOG("reload the game mode cmd");
+	NVT_ERR("reload the game mode cmd");
 	nvt_game_mode_recovery();
 #endif
 
@@ -4016,13 +4008,13 @@ static int nvt_drm_panel_notifier_callback(struct notifier_block *self, unsigned
 		blank = evdata->data;
 		if (event == MI_DRM_PRE_EVENT_BLANK) {
 			if (*blank == MI_DRM_BLANK_POWERDOWN) {
-				NVT_LOG("event=%lu, *blank=%d\n", event, *blank);
+				NVT_ERR("event=%lu, *blank=%d\n", event, *blank);
 				flush_workqueue(ts->event_wq);
 				nvt_ts_suspend(&ts->client->dev);
 			}
 		} else if (event == MI_DRM_EVENT_BLANK) {
 			if (*blank == MI_DRM_BLANK_UNBLANK) {
-				NVT_LOG("event=%lu, *blank=%d\n", event, *blank);
+				NVT_ERR("event=%lu, *blank=%d\n", event, *blank);
 				flush_workqueue(ts->event_wq);
 				queue_work(ts->event_wq, &ts->resume_work);
 			}
