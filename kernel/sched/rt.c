@@ -1948,7 +1948,8 @@ static int find_lowest_rq(struct task_struct *task)
 	if (!ret)
 		return -1; /* No targets found */
 
-	cpu = rt_energy_aware_wake_cpu(task);
+	if (static_branch_unlikely(&sched_energy_present))
+		cpu = rt_energy_aware_wake_cpu(task);
 
 	if (cpu == -1)
 		cpu = task_cpu(task);
