@@ -180,12 +180,6 @@ unsigned int sched_capacity_margin_up[CPU_NR] = {
 unsigned int sched_capacity_margin_down[CPU_NR] = {
 	[0 ... CPU_NR - 1] = 1078
 }; /* ~5% margin */
-unsigned int sched_capacity_margin_up_boosted[CPU_NR] = {
-	3658, 3658, 3658, 3658, 3658, 3658, 1078, 1024
-}; /* 72% margin for small, 5% for big, 0% for big+ */
-unsigned int sched_capacity_margin_down_boosted[CPU_NR] = {
-	3658, 3658, 3658, 3658, 3658, 3658, 3658, 3658
-}; /* not used for small cores, 72% margin for big, 72% margin for big+ */
 
 /* 1ms default for 20ms window size scaled to 1024 */
 unsigned int sysctl_sched_min_task_util_for_boost = 51;
@@ -4041,24 +4035,12 @@ static inline bool task_fits_capacity(struct task_struct *p,
 					long capacity,
 					int cpu)
 {
-	unsigned int margin;
-
 	/*
-	 * Derive upmigration/downmigrate margin wrt the src/dest
-	 * CPU.
+	 * Calculate margin on the fly depending on the STune boost value,
+	 * Formula: margin = SCHED_CAPACITY_SCALE / (1 - margin_percentage)
 	 */
-	if (capacity_orig_of(task_cpu(p)) > capacity_orig_of(cpu))
-		margin = schedtune_task_boost(p) > 0 &&
-			  !schedtune_prefer_high_cap(p) &&
-			   p->prio <= DEFAULT_PRIO ?
-			sched_capacity_margin_down_boosted[task_cpu(p)] :
-			sched_capacity_margin_down[task_cpu(p)];
-	else
-		margin = schedtune_task_boost(p) > 0 &&
-			  !schedtune_prefer_high_cap(p) &&
-			   p->prio <= DEFAULT_PRIO ?
-			sched_capacity_margin_up_boosted[task_cpu(p)] :
-			sched_capacity_margin_up[task_cpu(p)];
+	unsigned int margin = SCHED_CAPACITY_SCALE / (100 -
+			      (capacity_margin + schedtune_task_boost(p))) * 100;
 
 	return capacity * 1024 > uclamp_task(p) * margin;
 }
