@@ -3190,7 +3190,7 @@ static inline bool is_full_throttle_boost(void)
 
 static inline enum sched_boost_policy task_boost_policy(struct task_struct *p)
 {
-	return false;
+	return SCHED_BOOST_NONE;
 }
 
 struct walt_sched_stats;
