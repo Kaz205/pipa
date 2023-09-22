@@ -42,7 +42,7 @@ qcom,dagu {
 	qcom,ffc-term-current-ma = <(-800)>;
 	qcom,fg-cc-cv-threshold-mv = <4440>;
 	qcom,fg-ffc-cc-cv-threshold-mv = <4470>;
-	qcom,nom-batt-capacity-mah = <8100>;
+	qcom,nom-batt-capacity-mah = <8840>;
 	qcom,batt-id-kohm = <100>;
 	qcom,battery-beta = <4250>;
 	qcom,therm-room-temp = <100000>;
