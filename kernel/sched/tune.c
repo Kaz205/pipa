@@ -589,7 +589,7 @@ bool schedtune_prefer_high_cap(struct task_struct *p)
 	/* Get prefer_high_cap value */
 	rcu_read_lock();
 	st = task_schedtune(p);
-	prefer_high_cap = st->prefer_high_cap;
+	prefer_high_cap = st->boost;
 	rcu_read_unlock();
 
 	return prefer_high_cap;
