@@ -587,6 +587,9 @@ prefer_idle_write(struct cgroup_subsys_state *css, struct cftype *cft,
 	    u64 prefer_idle)
 {
 	struct schedtune *st = css_st(css);
+
+	if (!sched_feat(EAS_PREFER_IDLE))
+		return 0;
 	st->prefer_idle = !!prefer_idle;
 
 	return 0;
@@ -801,9 +804,9 @@ static void write_default_values(struct cgroup_subsys_state *css)
 	static struct st_data st_targets[] = {
 		{ "audio-app",	0, 0, 0, 0 },
 		{ "background",	0, 0, 0, 0 },
-		{ "foreground",	0, 1, 0, 0 },
+		{ "foreground",	0, 0, 0, 0 },
 		{ "rt",		0, 0, 0, 0 },
-		{ "top-app",	1, 1, 0, 0 },
+		{ "top-app",	1, 0, 0, 0 },
 	};
 	int i;
 
