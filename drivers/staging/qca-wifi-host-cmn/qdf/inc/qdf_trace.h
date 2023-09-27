@@ -536,7 +536,7 @@ enum qdf_dpt_debugfs_state {
 
 typedef void (*tp_qdf_trace_cb)(void *p_mac, tp_qdf_trace_record, uint16_t);
 typedef void (*tp_qdf_state_info_cb) (char **buf, uint16_t *size);
-#ifdef WLAN_FEATURE_MEMDUMP_ENABLE
+#if defined(WLAN_FEATURE_MEMDUMP_ENABLE) && defined(WLAN_DEBUG)
 void qdf_register_debugcb_init(void);
 void qdf_register_debug_callback(QDF_MODULE_ID module_id,
 					tp_qdf_state_info_cb qdf_state_infocb);
@@ -545,6 +545,15 @@ QDF_STATUS qdf_state_info_dump_all(char *buf, uint16_t size,
 #else /* WLAN_FEATURE_MEMDUMP_ENABLE */
 static inline void qdf_register_debugcb_init(void)
 {
+}
+static inline void qdf_register_debug_callback(QDF_MODULE_ID module_id,
+					tp_qdf_state_info_cb qdf_state_infocb)
+{
+}
+static inline QDF_STATUS qdf_state_info_dump_all(char *buf, uint16_t size,
+			uint16_t *driver_dump_size)
+{
+	return QDF_STATUS_SUCCESS;
 }
 #endif /* WLAN_FEATURE_MEMDUMP_ENABLE */
 
