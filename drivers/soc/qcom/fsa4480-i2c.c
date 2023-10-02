@@ -9,6 +9,7 @@
 #include <linux/i2c.h>
 #include <linux/mutex.h>
 #include <linux/soc/qcom/fsa4480-i2c.h>
+#include <linux/mmhardware_others.h>
 
 #define FSA4480_I2C_NAME	"fsa4480-driver"
 
@@ -149,6 +150,12 @@ static int fsa4480_usbc_analog_setup_switches(struct fsa4480_priv *fsa_priv)
 	}
 	dev_dbg(dev, "%s: setting GPIOs active = %d\n",
 		__func__, mode.intval != POWER_SUPPLY_TYPEC_NONE);
+
+	if ((atomic_read(&(fsa_priv->usbc_mode)) != mode.intval) &&
+		(mode.intval == POWER_SUPPLY_TYPEC_SINK_AUDIO_ADAPTER ||
+		mode.intval == POWER_SUPPLY_TYPEC_NONE)) {
+		atomic_set(&(fsa_priv->usbc_mode), mode.intval);
+	}
 
 	switch (mode.intval) {
 	/* add all modes FSA should notify for in here */
@@ -311,7 +318,7 @@ int fsa4480_switch_event(struct device_node *node,
 		else
 			switch_control = 0x7;
 		fsa4480_usbc_update_settings(fsa_priv, switch_control, 0x9F);
-		break;
+		return 1;
 	case FSA_USBC_ORIENTATION_CC1:
 		fsa4480_usbc_update_settings(fsa_priv, 0x18, 0xF8);
 		return fsa4480_validate_display_port_settings(fsa_priv);
@@ -385,6 +392,9 @@ static int fsa4480_probe(struct i2c_client *i2c,
 		goto err_supply;
 	}
 
+#ifdef CONFIG_MMHARDWARE_OTHER_DETECTION
+	register_otherkobj_under_mmsysfs(MM_HW_AS, "audioswitch");
+#endif
 	fsa4480_update_reg_defaults(fsa_priv->regmap);
 
 	fsa_priv->psy_nb.notifier_call = fsa4480_usbc_event_changed;
