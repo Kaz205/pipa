@@ -729,6 +729,7 @@ static int msm_lsm_reg_model(struct snd_pcm_substream *substream,
 			__func__, rc);
 		goto err_copy;
 	}
+	prtd->lsm_client->model_reged = true;
 	return rc;
 
 err_copy:
@@ -744,6 +745,7 @@ static int msm_lsm_dereg_model(struct snd_pcm_substream *substream,
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	int rc = 0;
 
+	prtd->lsm_client->model_reged = false;
 	rc = q6lsm_set_one_param(prtd->lsm_client, p_info,
 				 NULL, LSM_DEREG_SND_MODEL);
 	if (rc)
@@ -2712,6 +2714,7 @@ static int msm_lsm_open(struct snd_pcm_substream *substream)
 	prtd->lsm_client->event_type = LSM_DET_EVENT_TYPE_LEGACY;
 	prtd->lsm_client->fe_id = rtd->dai_link->id;
 	prtd->lsm_client->unprocessed_data = 0;
+	prtd->lsm_client->model_reged = false;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 110))
 	prtd->ws = wakeup_source_register(rtd->dev, "lsm-client");
 #else
@@ -2899,21 +2902,24 @@ static int msm_lsm_close(struct snd_pcm_substream *substream)
 			dev_dbg(rtd->dev,
 				"%s: LSM client session stopped %d\n",
 				 __func__, ret);
+			prtd->lsm_client->started = false;
+	}
 
-		/*
-		 * Go Ahead and try de-register sound model,
-		 * even if stop failed
-		 */
-		prtd->lsm_client->started = false;
-
+	/*
+	 * De-register existing sound model
+	 * to free SM and CAL buffer, even if
+	 * lsm client is not started.
+	 * If sound model Deregisted, wo sould
+	 * not De-register again.
+	 */
+	if (prtd->lsm_client->model_reged) {
 		ret = q6lsm_deregister_sound_model(prtd->lsm_client);
 		if (ret)
-			dev_err(rtd->dev,
-				"%s: dereg_snd_model failed, err = %d\n",
+			dev_err(rtd->dev, "%s: dereg_snd_model failed, err = %d\n",
 				__func__, ret);
 		else
 			dev_dbg(rtd->dev, "%s: dereg_snd_model successful\n",
-				 __func__);
+				__func__);
 	}
 
 	msm_pcm_routing_dereg_phy_stream(rtd->dai_link->id,

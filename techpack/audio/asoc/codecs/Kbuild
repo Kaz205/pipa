@@ -92,6 +92,8 @@ ifeq ($(KERNEL_BUILD), 0)
 	endif
 endif
 
+CDEFINES += -DCONFIG_TARGET_PRODUCT_PIPA
+
 # As per target team, build is done as follows:
 # Defconfig : build with default flags
 # Slub      : defconfig  + CONFIG_SLUB_DEBUG := y +
@@ -249,6 +251,7 @@ ifeq ($(KERNEL_BUILD), 1)
 	obj-y	+= wcd937x/
 	obj-y	+= wcd938x/
 	obj-y	+= bolero/
+	obj-y	+= aw882xx/
 	obj-y	+= rouleur/
 	obj-y	+= wsa883x/
 	obj-y	+= sdm660_cdc/

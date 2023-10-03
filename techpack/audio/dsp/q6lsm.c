@@ -1691,11 +1691,12 @@ int q6lsm_deregister_sound_model(struct lsm_client *client)
 		pr_err("%s: session[%d]", __func__, client->session);
 		return -EINVAL;
 	}
-
+#if defined(CONFIG_TARGET_PRODUCT_PIPA)
+	client->model_reged = false;
+#endif
 	memset(&cmd, 0, sizeof(cmd));
 	q6lsm_add_hdr(client, &cmd.hdr, sizeof(cmd.hdr), false);
 	cmd.hdr.opcode = LSM_SESSION_CMD_DEREGISTER_SOUND_MODEL;
-
 	rc = q6lsm_apr_send_pkt(client, client->apr, &cmd.hdr, true, NULL);
 	if (rc) {
 		pr_err("%s: Failed cmd opcode 0x%x, rc %d\n", __func__,
@@ -1703,9 +1704,7 @@ int q6lsm_deregister_sound_model(struct lsm_client *client)
 	} else {
 		pr_debug("%s: Deregister sound model succeeded\n", __func__);
 	}
-
 	q6lsm_snd_model_buf_free(client, &p_info);
-
 	return rc;
 }
 EXPORT_SYMBOL(q6lsm_deregister_sound_model);
