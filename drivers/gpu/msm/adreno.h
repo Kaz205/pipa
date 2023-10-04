@@ -792,7 +792,7 @@ struct adreno_coresight_attr {
 	struct adreno_coresight_register *reg;
 };
 
-#if IS_ENABLED(CONFIG_CORESIGHT_ARDENO)
+#if IS_ENABLED(CONFIG_CORESIGHT_ADRENO)
 ssize_t adreno_coresight_show_register(struct device *device,
 		struct device_attribute *attr, char *buf);
 
@@ -1082,7 +1082,7 @@ void adreno_fault_skipcmd_detached(struct adreno_device *adreno_dev,
 					 struct adreno_context *drawctxt,
 					 struct kgsl_drawobj *drawobj);
 
-#if IS_ENABLED(CONFIG_CORESIGHT_ARDENO)
+#if IS_ENABLED(CONFIG_CORESIGHT_ADRENO)
 int adreno_coresight_init(struct adreno_device *adreno_dev);
 
 void adreno_coresight_start(struct adreno_device *adreno_dev);
