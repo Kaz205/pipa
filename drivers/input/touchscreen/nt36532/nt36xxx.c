@@ -3991,27 +3991,27 @@ static struct of_device_id nvt_match_table[] = {
 #ifdef CONFIG_PM
 static int nvt_pm_suspend(struct device *dev)
 {
-	NVT_LOG("system enters into pm_suspend");
+	NVT_ERR("system enters into pm_suspend");
 	if (device_may_wakeup(dev) && ts->db_wakeup) {
-		NVT_LOG("enable touch irq wake\n");
+		NVT_ERR("enable touch irq wake\n");
 		enable_irq_wake(ts->client->irq);
 	}
 	ts->dev_pm_suspend = true;
 	reinit_completion(&ts->dev_pm_suspend_completion);
-	NVT_LOG("system enters into pm_suspend2");
+	NVT_ERR("system enters into pm_suspend2");
 	return 0;
 }
 
 static int nvt_pm_resume(struct device *dev)
 {
-	NVT_LOG("system resume from pm_suspend");
+	NVT_ERR("system resume from pm_suspend");
 	if (device_may_wakeup(dev) && ts->db_wakeup) {
-		NVT_LOG("disable touch irq wake\n");
+		NVT_ERR("disable touch irq wake\n");
 		disable_irq_wake(ts->client->irq);
 	}
 	ts->dev_pm_suspend = false;
 	complete(&ts->dev_pm_suspend_completion);
-	NVT_LOG("system resume from pm_suspend2");
+	NVT_ERR("system resume from pm_suspend2");
 	return 0;
 }
 
