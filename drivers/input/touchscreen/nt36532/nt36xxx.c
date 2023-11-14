@@ -3881,7 +3881,7 @@ static int nvt_drm_panel_notifier_callback(struct notifier_block *self, unsigned
 
 	if (evdata->data && ts) {
 		blank = evdata->data;
-		if (event == MI_DRM_PRE_EVENT_BLANK) {
+		if (event == MI_DRM_PRE_EVENT_BLANK || event == MI_DRM_EARLY_EVENT_BLANK) {
 			if (*blank == MI_DRM_BLANK_POWERDOWN) {
 				NVT_ERR("event=%lu, *blank=%d\n", event, *blank);
 				flush_workqueue(ts->event_wq);
