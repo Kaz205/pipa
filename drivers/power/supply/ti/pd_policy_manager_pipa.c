@@ -49,6 +49,8 @@
 #define PM_WORK_RUN_QUICK_INTERVAL		200
 #define PM_WORK_RUN_CRITICAL_INTERVAL		100
 
+#undef pr_info
+#define pr_info pr_debug
 
 enum {
 	PM_ALGO_RET_OK,
