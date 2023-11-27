@@ -208,6 +208,9 @@
 #define DEFAULT_FFC_TERM_CURRENT	1000
 static struct fg_irq_info fg_irqs[FG_GEN4_IRQ_MAX];
 
+#undef pr_info
+#define pr_info pr_debug
+
 /* DT parameters for FG device */
 struct fg_dt_props {
 	bool	force_load_profile;
