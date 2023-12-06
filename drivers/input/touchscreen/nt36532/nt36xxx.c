@@ -3674,11 +3674,10 @@ static int32_t nvt_ts_suspend(struct device *dev)
 #endif
 
 	if (!bTouchIsAwake) {
-		NVT_LOG("Touch is already suspend\n");
+		NVT_ERR("Touch is already suspend\n");
 		return 0;
 	}
 
-	pm_stay_awake(dev);
 	ts->ic_state = NVT_IC_SUSPEND_IN;
 
 	if (!ts->db_wakeup)
@@ -3697,6 +3696,7 @@ static int32_t nvt_ts_suspend(struct device *dev)
 	bTouchIsAwake = 0;
 
 	if (ts->db_wakeup & 0x01 || ts->db_wakeup & 0x02) {
+		pr_info("AAAA: db_wakeup 0x01 0x02");
 		/*---write command to enter "wakeup gesture mode"---*/
 		/*DoubleClick wakeup CMD was sent by display to meet timing*/
 
@@ -3715,6 +3715,7 @@ static int32_t nvt_ts_suspend(struct device *dev)
 		CTP_SPI_WRITE(ts->client, buf, 3);
 		NVT_LOG("%s pen wakeup gesture\n", enable ? "Enable" : "Disable");
 	} else if (ts->db_wakeup == 0) {
+		pr_info("AAAA: db_wakeup 0");
 		/*---write command to enter "deep sleep mode"---*/
 		buf[0] = EVENT_MAP_HOST_CMD;
 		buf[1] = 0x11;
@@ -3767,7 +3768,6 @@ static int32_t nvt_ts_suspend(struct device *dev)
 		NVT_ERR("IC state may error,caused by suspend/resume flow, please CHECK!!");
 
 	NVT_LOG("end\n");
-	pm_relax(dev);
 
 	return 0;
 }
