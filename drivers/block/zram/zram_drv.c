@@ -41,7 +41,7 @@ static DEFINE_IDR(zram_index_idr);
 static DEFINE_MUTEX(zram_index_mutex);
 
 static int zram_major;
-static const char *default_compressor = "lzo";
+static const char *default_compressor = "lz4";
 
 /* Module params (documentation at end) */
 static unsigned int num_devices = 1;
@@ -1009,6 +1009,7 @@ static ssize_t comp_algorithm_store(struct device *dev,
 	struct zram *zram = dev_to_zram(dev);
 	char compressor[ARRAY_SIZE(zram->compressor)];
 	size_t sz;
+	return 0;
 
 	strlcpy(compressor, buf, sizeof(compressor));
 	/* ignore trailing newline */
@@ -1838,6 +1839,7 @@ static ssize_t disksize_store(struct device *dev,
 	struct zcomp *comp;
 	struct zram *zram = dev_to_zram(dev);
 	int err;
+	return 0;
 
 	disksize = memparse(buf, NULL);
 	if (!disksize)
@@ -2054,7 +2056,7 @@ static int zram_add(void)
 	snprintf(zram->disk->disk_name, 16, "zram%d", device_id);
 
 	/* Actual capacity set using syfs (/sys/block/zram<id>/disksize */
-	set_capacity(zram->disk, 0);
+	set_capacity(zram->disk, 2048 >> SECTOR_SHIFT);
 	/* zram devices sort of resembles non-rotational disks */
 	blk_queue_flag_set(QUEUE_FLAG_NONROT, zram->disk->queue);
 	blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, zram->disk->queue);
