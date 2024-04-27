@@ -79,6 +79,9 @@ EXPORT_SYMBOL_GPL(arm_pm_restart);
 
 void noinstr cpu_do_idle(void)
 {
+	if (need_resched())
+		return;
+	
 	dsb(sy);
 	wfi();
 }
