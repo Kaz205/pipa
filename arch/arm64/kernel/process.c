@@ -82,14 +82,18 @@ s64 teo_wfi_timeout_us(void);
 
 void noinstr cpu_do_idle(void)
 {
-	s64 wfi_timeout_us = teo_wfi_timeout_us();
+	s64 wfi_timeout_us;
 	struct hrtimer *timer = NULL;
+
+	if (need_resched())
+		return;
 
 	/*
 	 * If the tick is stopped, arm a timer to ensure that the CPU doesn't
 	 * stay in WFI too long and burn power. That way, the CPU will be woken
 	 * up so it can enter a deeper idle state instead of staying in WFI.
 	 */
+	wfi_timeout_us = teo_wfi_timeout_us();
 	if (wfi_timeout_us) {
 		/* Use TEO's estimated sleep duration with some slack added */
 		timer = this_cpu_ptr(&wfi_timer);
