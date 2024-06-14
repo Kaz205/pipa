@@ -140,8 +140,6 @@
 #include <linux/sched/topology.h>
 #include <linux/tick.h>
 
-#include "gov.h"
-
 /*
  * The number of bits to shift the CPU's capacity by in order to determine
  * the utilized threshold.
@@ -166,6 +164,12 @@
  * the detection of recent early wakeup patterns.
  */
 #define NR_RECENT	9
+
+/*
+ * Idle state target residency threshold used for deciding whether or not to
+ * check the time till the closest expected timer event.
+ */
+#define RESIDENCY_THRESHOLD_NS	(15 * NSEC_PER_USEC)
 
 /**
  * struct teo_bin - Metrics used by the TEO cpuidle governor.
